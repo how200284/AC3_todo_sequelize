@@ -43,9 +43,19 @@ app.get('/users/register', (req, res) => {
 })
 
 app.post('/users/register', (req, res) => {
-  const { name, email, password } = req.body
-  User.create({ name, email, password })
-    .then(user => res.redirect('/'))
+  const { name, email, password, confirmPassword } = req.body
+  User.findOne({ where: { email } }).then(user => {
+    if(user) {
+      console.log('This email has been registered.')
+      return res.render('register', { name, email, password, confirmPassword })
+    }
+    return bcrypt
+      .genSalt(10)
+      .then(salt => bcrypt.hash(password, salt))
+      .then(hash => User.create({ name, email, password: hash }))
+      .then(() => res.redirect('/'))
+      .catch(err => console.error(err))
+  })
 })
 
 app.get('/users/logout', (req, res) => {
