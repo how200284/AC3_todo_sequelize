@@ -20,10 +20,22 @@ router.get('/register', (req, res) => {
 })
 
 router.post('/register', (req, res) => {
+  const errors = []
   const { name, email, password, confirmPassword } = req.body
+
+  if (!name || !email || !password || !confirmPassword) {
+    errors.push('All fields are inquired')
+  }
+  if (password !== confirmPassword) {
+    errors.push('Password & Confirm Password do not match. Please try again.')
+  }
+  if (errors.length) {
+    return res.render('register', { errors, name, email })
+  }
+
   User.findOne({ where: { email } }).then(user => {
     if (user) {
-      console.log('This email has been registered.')
+      errors.push('This email has been registered.')
       return res.render('register', { name, email, password, confirmPassword })
     }
     return bcrypt
@@ -37,6 +49,7 @@ router.post('/register', (req, res) => {
 
 router.get('/logout', (req, res) => {
   req.logout()
+  req.flash('success_msg', 'You\'ve logged out successfully.')
   res.redirect('/users/login')
 })
 
